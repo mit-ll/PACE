@@ -1,0 +1,69 @@
+{
+  "users": [
+    {
+      "id": "Alice",
+      "password": "AlicePassword",
+      "authorizations": [
+        "top secret",
+        "defaultVisibility"
+      ],
+      "encryptionKeys": "keys/Alice/encryption.keys",
+      "signatureKeys": {
+        "RSA_PKCS1": "keys/Alice/RSA-signing.keys",
+        "RSA_PSS": "keys/Alice/RSA-signing.keys",
+        "DSA": "keys/Alice/DSA-signing.keys",
+        "ECDSA": "keys/Alice/ECDSA-signing.keys"
+      }
+    },
+    {
+      "id": "Bob",
+      "password": "BobPassword",
+      "authorizations": [
+        "admin",
+        "secret",
+        "defaultVisibility"
+      ],
+      "encryptionKeys": "keys/Bob/encryption.keys",
+      "signatureKeys": {
+        "RSA_PKCS1": "keys/Bob/RSA-signing.keys",
+        "RSA_PSS": "keys/Bob/RSA-signing.keys",
+        "DSA": "keys/Bob/DSA-signing.keys",
+        "ECDSA": "keys/Bob/ECDSA-signing.keys"
+      }
+    },
+    {
+      "id": "Charlie",
+      "password": "CharliePassword",
+      "authorizations": [
+        "top secret",
+        "secret",
+        "admin",
+        "defaultVisibility"
+      ],
+      "encryptionKeys": "keys/Charlie/encryption.keys",
+      "signatureKeys": {
+        "RSA_PKCS1": "keys/Charlie/RSA-signing.keys",
+        "RSA_PSS": "keys/Charlie/RSA-signing.keys",
+        "DSA": "keys/Charlie/DSA-signing.keys",
+        "ECDSA": "keys/Charlie/ECDSA-signing.keys"
+      }
+    },
+    {
+      "id": "Eve",
+      "password": "EvePassword",
+      "authorizations": [
+        "top secret",
+        "secret",
+        "admin",
+        "defaultVisibility"
+      ],
+      "encryptionKeys": "keys/Eve/encryption.keys",
+      "signatureKeys": {
+        "RSA_PKCS1": "keys/Eve/RSA-signing.keys",
+        "RSA_PSS": "keys/Eve/RSA-signing.keys",
+        "DSA": "keys/Eve/DSA-signing.keys",
+        "ECDSA": "keys/Eve/ECDSA-signing.keys"
+      }
+    }
+  ]
+}

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright 2016 MIT Lincoln Laboratory
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>edu.mit.ll.pace</groupId>
+    <artifactId>pace-project</artifactId>
+    <version>1.0-beta</version>
+  </parent>
+  <artifactId>pace-performance</artifactId>
+  <name>performance testing</name>
+  <description>This module handles the performance testing for PACE.</description>
+  <properties>
+    <skipEncryptionRead>true</skipEncryptionRead>
+    <skipEncryptionWrite>true</skipEncryptionWrite>
+    <skipSignatureRead>true</skipSignatureRead>
+    <skipSignatureWrite>true</skipSignatureWrite>
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>edu.mit.ll.pace</groupId>
+      <artifactId>pace-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>edu.mit.ll.pace</groupId>
+      <artifactId>pace-test</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.accumulo</groupId>
+      <artifactId>accumulo-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-generator-annprocess</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>run-EncryptionReadBenchmark</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <skip>${skipEncryptionRead}</skip>
+              <classpathScope>test</classpathScope>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath />
+                <argument>org.openjdk.jmh.Main</argument>
+                <argument>edu.mit.ll.pace.performance.EncryptionReadBenchmark.benchmark</argument>
+                <argument>-rf</argument>
+                <argument>json</argument>
+                <argument>-rff</argument>
+                <argument>${project.build.directory}/jmh-encryption-read.json</argument>
+                <argument>-jvmArgs</argument>
+                <argument>-Xms4096m -Xmx16384m</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-EncryptionWriteBenchmark</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <skip>${skipEncryptionWrite}</skip>
+              <classpathScope>test</classpathScope>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath />
+                <argument>org.openjdk.jmh.Main</argument>
+                <argument>edu.mit.ll.pace.performance.EncryptionWriteBenchmark.benchmark</argument>
+                <argument>-rf</argument>
+                <argument>json</argument>
+                <argument>-rff</argument>
+                <argument>${project.build.directory}/jmh-encryption-write.json</argument>
+                <argument>-jvmArgs</argument>
+                <argument>-Xms4096m -Xmx16384m</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-SignatureReadBenchmark</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <skip>${skipSignatureRead}</skip>
+              <classpathScope>test</classpathScope>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath />
+                <argument>org.openjdk.jmh.Main</argument>
+                <argument>edu.mit.ll.pace.performance.SignatureReadBenchmark.benchmark</argument>
+                <argument>-rf</argument>
+                <argument>json</argument>
+                <argument>-rff</argument>
+                <argument>${project.build.directory}/jmh-signature-read.json</argument>
+                <argument>-jvmArgs</argument>
+                <argument>-Xms4096m -Xmx16384m</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-benchmarks</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <phase>integration-test</phase>
+            <configuration>
+              <skip>${skipSignatureWrite}</skip>
+              <classpathScope>test</classpathScope>
+              <executable>java</executable>
+              <arguments>
+                <argument>-classpath</argument>
+                <classpath />
+                <argument>org.openjdk.jmh.Main</argument>
+                <argument>edu.mit.ll.pace.performance.SignatureWriteBenchmark.benchmark</argument>
+                <argument>-rf</argument>
+                <argument>json</argument>
+                <argument>-rff</argument>
+                <argument>${project.build.directory}/jmh-signature-write.json</argument>
+                <argument>-jvmArgs</argument>
+                <argument>-Xms4096m -Xmx16384m</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes combine.children="append">
+            <exclude>src/main/resources/**/*.json</exclude>
+            <exclude>src/main/resources/**/*.keys</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>all</id>
+      <properties>
+        <skipEncryptionRead>false</skipEncryptionRead>
+        <skipEncryptionWrite>false</skipEncryptionWrite>
+        <skipSignatureRead>false</skipSignatureRead>
+        <skipSignatureWrite>false</skipSignatureWrite>
+      </properties>
+    </profile>
+    <profile>
+      <id>encryption</id>
+      <properties>
+        <skipEncryptionRead>false</skipEncryptionRead>
+        <skipEncryptionWrite>false</skipEncryptionWrite>
+      </properties>
+    </profile>
+    <profile>
+      <id>encryptionRead</id>
+      <properties>
+        <skipEncryptionRead>false</skipEncryptionRead>
+      </properties>
+    </profile>
+    <profile>
+      <id>encryptionWrite</id>
+      <properties>
+        <skipEncryptionWrite>false</skipEncryptionWrite>
+      </properties>
+    </profile>
+    <profile>
+      <id>signature</id>
+      <properties>
+        <skipSignatureRead>false</skipSignatureRead>
+        <skipSignatureWrite>false</skipSignatureWrite>
+      </properties>
+    </profile>
+    <profile>
+      <id>signatureRead</id>
+      <properties>
+        <skipSignatureRead>false</skipSignatureRead>
+      </properties>
+    </profile>
+    <profile>
+      <id>signatureWrite</id>
+      <properties>
+        <skipSignatureWrite>false</skipSignatureWrite>
+      </properties>
+    </profile>
+  </profiles>
+</project>

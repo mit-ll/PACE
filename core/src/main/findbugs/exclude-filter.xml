@@ -1,0 +1,46 @@
+<!--
+  Copyright 2016 MIT Lincoln Laboratory
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<FindBugsFilter>
+  <Match>
+    <!-- The purpose of the method is to test a null argument -->
+    <Or>
+      <Class name="edu.mit.ll.pace.encryption.EncryptedBatchScannerTest"/>
+      <Class name="edu.mit.ll.pace.encryption.EntryEncryptorTest"/>
+      <Class name="edu.mit.ll.pace.signature.EntrySignerTest"/>
+    </Or>
+    <Bug code="NP" pattern="NP_NULL_PARAM_DEREF_ALL_TARGETS_DANGEROUS"/>
+  </Match>
+  <Match>
+    <!-- The purpose of the method is to test a null argument -->
+    <Or>
+      <Class name="edu.mit.ll.pace.encryption.EncryptedBatchScannerTest"/>
+      <Class name="edu.mit.ll.pace.encryption.EncryptedBatchWriterTest"/>
+      <Class name="edu.mit.ll.pace.encryption.EntryEncryptorTest"/>
+      <Class name="edu.mit.ll.pace.encryption.FieldEncryptorTest"/>
+      <Class name="edu.mit.ll.pace.signature.SignedBatchScannerTest"/>
+      <Class name="edu.mit.ll.pace.signature.SignedBatchWriterTest"/>
+      <Class name="edu.mit.ll.pace.signature.SignedScannerTest"/>
+      <Class name="edu.mit.ll.pace.signature.ValueSignerTest"/>
+      <Class name="edu.mit.ll.pace.internal.UtilsTest"/>
+    </Or>
+    <Bug code="NP" pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL"/>
+  </Match>
+  <Match>
+    <!-- We are intending to search for an array on a single byte[] -->
+    <Class name="edu.mit.ll.pace.encryption.EntryEncryptorTest"/>
+    <Bug code="VA" pattern="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG"/>
+  </Match>
+</FindBugsFilter>

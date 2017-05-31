@@ -1,0 +1,30 @@
+{
+  "data-table": "data/data.rf",
+  "key-manifest": "keys.json",
+  "visibility": "default",
+  "authorizations": [
+    "default"
+  ],
+  "tests": [
+    {
+      "config": "encrypt-value.ini",
+      "keys": "data/keys/encryption.keys",
+      "table": "data/encrypt-value.rf"
+    },
+    {
+      "config": "encrypt-entry.ini",
+      "keys": "data/keys/encryption.keys",
+      "table": "data/encrypt-entry.rf"
+    },
+    {
+      "config": "searchable.ini",
+      "keys": "data/keys/encryption.keys",
+      "table": "data/searchable.rf"
+    },
+    {
+      "config": "obfuscate-key.ini",
+      "keys": "data/keys/encryption.keys",
+      "table": "data/obfuscate-key.rf"
+    }
+  ]
+}

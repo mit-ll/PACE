@@ -1,0 +1,11 @@
+{
+  "keys": [
+    {
+      "id": "keys",
+      "encryptionKeys": [],
+      "verifierKeys": [
+        "keys"
+      ]
+    }
+  ]
+}

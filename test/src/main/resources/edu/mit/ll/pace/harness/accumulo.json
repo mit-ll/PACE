@@ -1,0 +1,7 @@
+{
+  "type": "MiniAccumuloCluster",
+  "admin": {
+    "username": "root",
+    "password": "root"
+  }
+}

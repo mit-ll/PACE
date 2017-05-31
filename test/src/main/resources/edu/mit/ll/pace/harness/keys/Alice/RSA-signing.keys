@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "signingKey": {
+    "keyId": "RSA_Alice",
+    "algorithm": "RSA",
+    "key": "MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAJyoQlLBVuC2L2GwFaAx5hywQVKW8/5QNBossOqhf9b7xIy/XIqDRBtUZ7yCNR6cv+89hSCLyFqT4+dGUrqOskTnn3bltI1WqJGQubjIY84jZGePsg/ZeRKWqHEfHhIIJS+SDN+t7QO8crcKK5M/YvXOuJQV1wQoaEs07YHtdxmPAgMBAAECgYAowhI3a7wJzPy44tJNko33Kthj/4hNw1o68SO6d/hF281AfU07cHmYzrYKsqnVZBz/xrbLR/MBtfaWppJBnXy9zeL6TrLXkjkg1psVVy9tsExbKfXYU1dX6eusmYE+0bbE75z9k9TRkkgFiHQ1wMI7Ivxcl/dRg5Y3sffVFo9j+QJBAN7w68Dr586gICEQhIKyPD/lm8bjk7Yf4sUtD7RkxFV7AIZrDa7KmigEnBFWR2GT4qt1ew3kp+TOei+69oDj/RUCQQCz4yJG+6EdyPLrRUX0VmDIXV5QbQqKf3+FwjUvAFgHKyR0eXXcFhhWtuzMJ/Gxstm07u/UC58TqnZoynu2vE0TAkB3dMgd+0meIZaVoPAfx7kY08MAcvi24ab02AxOMKAy3VGOtNYEDnNDdhTaBU0CL+eIz847x4VeyHQYFyn2LjNxAkEAqV584op++zU9isjxgYlmnKBUcbMJDrfW0JC3VGalezJio4vMrYjcJ6EZuWsOhLoZguLJSkQa5gBEdovXCYmnowJAPQlzwoxkuf1z7LPCX0J716WxQsIE4gnMcRBdSMPpcxMQbZ4iaK0x6TVjvPxK4951E3Qo93m3E6fqWIQVZD7DGg\u003d\u003d"
+  },
+  "verificationKeys": [
+    {
+      "keyId": "RSA_Charlie",
+      "algorithm": "RSA",
+      "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC2Pg9foAxzoudY5JyJ5XAWM/rBOoiuHG/o5D1lutsVxwfSmQX7MEQGb3SjLjEWuE/yT48wBJs1ABpNHjXauAWslEaBrKLlno88Rd2cdF0ci9RWQYxHGI3lChHgg3/BaQitUTdiHgPTzqjDcJ6OzSu5l0hgE8UDka7OsaIldXEPAQIDAQAB"
+    },
+    {
+      "keyId": "RSA_Alice",
+      "algorithm": "RSA",
+      "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCcqEJSwVbgti9hsBWgMeYcsEFSlvP+UDQaLLDqoX/W+8SMv1yKg0QbVGe8gjUenL/vPYUgi8hak+PnRlK6jrJE55925bSNVqiRkLm4yGPOI2Rnj7IP2XkSlqhxHx4SCCUvkgzfre0DvHK3CiuTP2L1zriUFdcEKGhLNO2B7XcZjwIDAQAB"
+    },
+    {
+      "keyId": "RSA_Bob",
+      "algorithm": "RSA",
+      "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCHEGdgHSlLbVTnUMM0Q1xyb/8xvOYVZmpKle745lzPR3+wAzjCVHb9WTlDtGK8YpYl/FjD1RuMl4h0HAoybqV3NnQClFpcNgydDuC+hCTtHo63U4ivXHMJmxKr3DV/Sof+kOmRa53z3o8HFA8u60m+MMvGaLrmKOc7rrj6jXNWGQIDAQAB"
+    }
+  ]
+}

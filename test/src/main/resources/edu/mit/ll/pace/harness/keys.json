@@ -1,0 +1,117 @@
+{
+  "keys": [
+    {
+      "id": "Alice",
+      "encryptionKeys": [
+        {
+          "id": "searchable_row",
+          "version": 2
+        },
+        {
+          "id": "searchable_colFamily",
+          "version": 2
+        },
+        {
+          "id": "searchable_colQualifier",
+          "version": 2
+        },
+        {
+          "id": "AES_GCM",
+          "version": 2
+        },
+        {
+          "attribute": "top secret",
+          "id": "AES_GCM",
+          "version": 1
+        }
+      ],
+      "verifierKeys": [
+        "Alice",
+        "Bob",
+        "Charlie"
+      ]
+    },
+    {
+      "id": "Bob",
+      "encryptionKeys": [
+        {
+          "id": "searchable_row",
+          "version": 2
+        },
+        {
+          "id": "searchable_colFamily",
+          "version": 2
+        },
+        {
+          "id": "searchable_colQualifier",
+          "version": 2
+        },
+        {
+          "id": "AES_GCM",
+          "version": 2
+        },
+        {
+          "attribute": "secret",
+          "id": "AES_GCM",
+          "version": 2
+        },
+        {
+          "attribute": "admin",
+          "id": "AES_GCM",
+          "version": 1
+        }
+      ],
+      "verifierKeys": [
+        "Alice",
+        "Bob",
+        "Charlie"
+      ]
+    },
+    {
+      "id": "Charlie",
+      "encryptionKeys": [
+        {
+          "id": "searchable_row",
+          "version": 2
+        },
+        {
+          "id": "searchable_colFamily",
+          "version": 2
+        },
+        {
+          "id": "searchable_colQualifier",
+          "version": 2
+        },
+        {
+          "id": "AES_GCM",
+          "version": 2
+        },
+        {
+          "attribute": "top secret",
+          "id": "AES_GCM",
+          "version": 1
+        },
+        {
+          "attribute": "secret",
+          "id": "AES_GCM",
+          "version": 2
+        },
+        {
+          "attribute": "admin",
+          "id": "AES_GCM",
+          "version": 1
+        }
+      ],
+      "verifierKeys": [
+        "Alice",
+        "Bob",
+        "Charlie"
+      ]
+    },
+    {
+      "id": "Eve",
+      "encryptionKeys": [],
+      "verifierKeys": []
+    }
+  ]
+}

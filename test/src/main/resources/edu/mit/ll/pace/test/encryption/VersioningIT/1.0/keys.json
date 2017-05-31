@@ -1,0 +1,31 @@
+{
+  "keys": [
+    {
+      "id": "keys",
+      "encryptionKeys": [
+        {
+          "id": "searchable_row",
+          "version": 1
+        },
+        {
+          "id": "searchable_colFamily",
+          "version": 1
+        },
+        {
+          "id": "searchable_colQualifier",
+          "version": 1
+        },
+        {
+          "id": "AES_GCM",
+          "version": 1
+        },
+        {
+          "attribute": "default",
+          "id": "AES_GCM",
+          "version": 1
+        }
+      ],
+      "verifierKeys": []
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "users": [
+    {
+      "id": "AccumuloUser",
+      "password": "AccumuloUserPassword",
+      "authorizations": [
+        "admin",
+        "doctor",
+        "nurse",
+        "default"
+      ],
+      "encryptionKeys": "keys/AccumuloUser/encryption.keys",
+      "signatureKeys": {
+        "RSA_PKCS1": "keys/AccumuloUser/RSA-signing.keys",
+        "RSA_PSS": "keys/AccumuloUser/RSA-signing.keys",
+        "DSA": "keys/AccumuloUser/DSA-signing.keys",
+        "ECDSA": "keys/AccumuloUser/ECDSA-signing.keys"
+      }
+    }
+  ]
+}

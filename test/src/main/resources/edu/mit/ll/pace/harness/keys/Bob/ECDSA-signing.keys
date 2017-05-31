@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "signingKey": {
+    "keyId": "ECDSA_Bob",
+    "algorithm": "ECDSA",
+    "key": "MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgtRx04nCxqXgSn1pTTcFbLKAVuAw9oOzibigNoZwvXaqgCgYIKoZIzj0DAQehRANCAAR1mSTDXLlAUXYhNppQWgkdeZxa2TlZY0V8PlKvO99C2I5bO1NNi5Es2UnHRwUdF8oz15DtBNxj9WLaLjx/T9OK"
+  },
+  "verificationKeys": [
+    {
+      "keyId": "ECDSA_Bob",
+      "algorithm": "ECDSA",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEdZkkw1y5QFF2ITaaUFoJHXmcWtk5WWNFfD5SrzvfQtiOWztTTYuRLNlJx0cFHRfKM9eQ7QTcY/Vi2i48f0/Tig\u003d\u003d"
+    },
+    {
+      "keyId": "ECDSA_Charlie",
+      "algorithm": "ECDSA",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtnwYcpK6S6sVMFpIDS+ynnBlISOleitsh3Tdovou28C2RrDSD65DgohW3f25wMsSUVsi29+I0nmUZ98L2yHu5Q\u003d\u003d"
+    },
+    {
+      "keyId": "ECDSA_Alice",
+      "algorithm": "ECDSA",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE8yNqvi3H8UNvMMWh5VSRGeRrdO8pGLwVWNCFBfihKWINWO6LBQlU05/GM8cIudsnfqaitrUzM8B/J/H+VtYdhQ\u003d\u003d"
+    }
+  ]
+}

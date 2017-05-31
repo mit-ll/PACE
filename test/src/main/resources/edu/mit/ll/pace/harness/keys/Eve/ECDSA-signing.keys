@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "signingKey": {
+    "keyId": "ECDSA_Eve",
+    "algorithm": "ECDSA",
+    "key": "MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgkEVhptMcCnzxJEJYsRu0Dh6QGaoBjYQk5Nh6Wu23bMCgCgYIKoZIzj0DAQehRANCAARXTWRl9srgxyS1Zp0lamI004mt8U1cJ3De54M6PudEB2/kqtmXj0xUcpgJ9O65iywVaD+77kTaj3VeyqWKQldc"
+  },
+  "verificationKeys": [
+    {
+      "keyId": "ECDSA_Eve",
+      "algorithm": "ECDSA",
+      "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEV01kZfbK4McktWadJWpiNNOJrfFNXCdw3ueDOj7nRAdv5KrZl49MVHKYCfTuuYssFWg/u+5E2o91XsqlikJXXA\u003d\u003d"
+    }
+  ]
+}

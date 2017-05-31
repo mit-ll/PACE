@@ -1,0 +1,40 @@
+{
+  "data-table": "data/data.rf",
+  "key-manifest": "keys.json",
+  "visibility": "default",
+  "authorizations": [
+    "default"
+  ],
+  "tests": [
+    {
+      "config": "RSA-PKCS1.ini",
+      "keys": "data/keys/RSA-signing.keys",
+      "table": "data/RSA-PKSC1.rf"
+    },
+    {
+      "config": "RSA-PSS.ini",
+      "keys": "data/keys/RSA-signing.keys",
+      "table": "data/RSA-PSS.rf"
+    },
+    {
+      "config": "DSA.ini",
+      "keys": "data/keys/DSA-signing.keys",
+      "table": "data/DSA.rf"
+    },
+    {
+      "config": "ECDSA.ini",
+      "keys": "data/keys/ECDSA-signing.keys",
+      "table": "data/ECDSA.rf"
+    },
+    {
+      "config": "RSA-PSS-colVis.ini",
+      "keys": "data/keys/RSA-signing.keys",
+      "table": "data/RSA-PSS-colVis.rf"
+    },
+    {
+      "config": "RSA-PSS-separateTable.ini",
+      "keys": "data/keys/RSA-signing.keys",
+      "table": "data/RSA-PSS-separateTable.rf"
+    }
+  ]
+}
