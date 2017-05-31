@@ -67,33 +67,33 @@ public final class MockEncryptionKeyContainer implements EncryptionKeyContainer 
   }
 
   @Override
-  public Collection<KeyWithVersion> getKeys(String id, int length) throws IllegalKeyRequestException {
+  public Collection<EncryptionKey> getKeys(String id, int length) throws IllegalKeyRequestException {
     if (!keys.containsKey(id)) {
       throw new IllegalKeyRequestException("getKey: " + id);
     }
 
-    List<KeyWithVersion> versionedKeys = new ArrayList<>();
+    List<EncryptionKey> versionedKeys = new ArrayList<>();
     int maxVersion = keys.get(id);
 
     // Get a key for each version, past and future.
     for (int i = 1; i <= maxVersion; i++) {
-      versionedKeys.add(new KeyWithVersion(generateKey(id, i, length), i));
+      versionedKeys.add(new EncryptionKey(generateKey(id, i, length), i, null, null));
     }
 
     return versionedKeys;
   }
 
   @Override
-  public KeyWithVersion getKey(String id, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getKey(String id, int length) throws IllegalKeyRequestException {
     if (!keys.containsKey(id)) {
       throw new IllegalKeyRequestException("getKey: " + id);
     }
     int version = keys.get(id);
-    return new KeyWithVersion(generateKey(id, version, length), version);
+    return new EncryptionKey(generateKey(id, version, length), version, null, null);
   }
 
   @Override
-  public byte[] getKey(String id, int version, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getKey(String id, int version, int length) throws IllegalKeyRequestException {
     if (!keys.containsKey(id)) {
       throw new IllegalKeyRequestException("getKey: " + id);
     }
@@ -102,20 +102,20 @@ public final class MockEncryptionKeyContainer implements EncryptionKeyContainer 
       throw new IllegalArgumentException("invalid version");
     }
 
-    return generateKey(id, version, length);
+    return new EncryptionKey(generateKey(id, version, length), version, null, null);
   }
 
   @Override
-  public KeyWithVersion getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException {
     if (!keys.containsKey(attribute)) {
       throw new IllegalKeyRequestException("getAttributeKey: " + attribute);
     }
     int version = keys.get(attribute);
-    return new KeyWithVersion(generateKey(attribute, id, version, length), version);
+    return new EncryptionKey(generateKey(attribute, id, version, length), version, null, null);
   }
 
   @Override
-  public byte[] getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException {
 
     if (!keys.containsKey(attribute)) {
       throw new IllegalKeyRequestException("getAttributeKey: " + attribute);
@@ -125,7 +125,7 @@ public final class MockEncryptionKeyContainer implements EncryptionKeyContainer 
       throw new IllegalArgumentException("invalid version");
     }
 
-    return generateKey(attribute, id, version, length);
+    return new EncryptionKey(generateKey(attribute, id, version, length), version, null, null);
   }
 
   /**

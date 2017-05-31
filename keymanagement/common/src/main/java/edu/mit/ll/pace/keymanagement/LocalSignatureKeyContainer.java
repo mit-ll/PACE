@@ -44,6 +44,8 @@ import com.google.gson.JsonParser;
 
 import edu.mit.ll.pace.IllegalKeyRequestException;
 import edu.mit.ll.pace.signature.SignatureKeyContainer;
+import edu.mit.ll.pace.signature.SigningKey;
+import edu.mit.ll.pace.signature.VerifyingKey;
 
 /**
  * Key container.
@@ -63,12 +65,12 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
   /**
    * The signing key for the key container.
    */
-  private final PrivateKeyWithId signingKey;
+  private final SigningKey signingKey;
 
   /**
    * Set of verification keys for testing signatures.
    */
-  private final Map<ByteBuffer,PublicKey> verificationKeys = new HashMap<>();
+  private final Map<ByteBuffer,VerifyingKey> verificationKeys = new HashMap<>();
 
   /**
    * Create a signature key container that only holds verification key.
@@ -93,7 +95,7 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
     try {
       PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
       KeyFactory keyFactory = KeyFactory.getInstance(privateKey.getAlgorithm());
-      this.signingKey = new PrivateKeyWithId(keyFactory.generatePrivate(keySpec), signingKeyId.clone());
+      this.signingKey = new SigningKey(keyFactory.generatePrivate(keySpec), signingKeyId.clone());
     } catch (InvalidKeySpecException | NoSuchAlgorithmException e) { // Won't be thrown, as we having a working algorithm and key spec.
       throw new IllegalStateException(e);
     }
@@ -110,7 +112,7 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
   public LocalSignatureKeyContainer(KeyPair keyPair, byte[] signingKeyId) {
     this(keyPair.getPrivate(), signingKeyId);
     checkArgument(keyPair.getPublic() != null, "keyPair.getPublic() is null");
-    addVerifierKey(keyPair.getPublic(), signingKeyId);
+    addVerifierKey(keyPair.getPublic(), signingKeyId, null, null);
   }
 
   /**
@@ -122,10 +124,7 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
    *          Id of the key.
    */
   public void addVerifierKey(PublicKey verifierKey, byte[] id) {
-    checkArgument(signingKey != null, "signingKey is null");
-    checkArgument(id != null, "id is null");
-    checkArgument(id.length != 0, "id is empty");
-    addVerifierKey(verifierKey, id, true);
+    addVerifierKey(verifierKey, id, null, null);
   }
 
   /**
@@ -135,29 +134,54 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
    *          The public key used for verification.
    * @param id
    *          Id of the key.
+   * @param startValidity
+   *          When the key started to be valid, or null for no start validity.
+   * @param endValidity
+   *          When the key stopped being valid, or null for no end validity.
+   */
+  public void addVerifierKey(PublicKey verifierKey, byte[] id, Long startValidity, Long endValidity) {
+    checkArgument(signingKey != null, "signingKey is null");
+    checkArgument(id != null, "id is null");
+    checkArgument(id.length != 0, "id is empty");
+
+    addVerifierKey(verifierKey, id, startValidity, endValidity, true);
+  }
+
+  /**
+   * Add a verifier key.
+   *
+   * @param verifierKey
+   *          The public key used for verification.
+   * @param id
+   *          Id of the key.
+   * @param startValidity
+   *          When the key started to be valid, or null for no start validity.
+   * @param endValidity
+   *          When the key stopped being valid, or null for no end validity.
    * @param copy
    *          Whether to copy the key.
    */
-  private void addVerifierKey(PublicKey verifierKey, byte[] id, boolean copy) {
+  private void addVerifierKey(PublicKey verifierKey, byte[] id, Long startValidity, Long endValidity, boolean copy) {
     checkArgument(verifierKey != null, "verifierKey is null");
     checkArgument(id != null, "id is null");
     checkArgument(id.length != 0, "id is empty");
+    checkArgument(startValidity == null || endValidity == null || endValidity >= startValidity, "end validity cannot come before start validity");
 
     if (copy) {
       try {
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(verifierKey.getEncoded());
         KeyFactory keyFactory = KeyFactory.getInstance(verifierKey.getAlgorithm());
-        this.verificationKeys.put(ByteBuffer.wrap(id.clone()), keyFactory.generatePublic(keySpec));
+        this.verificationKeys.put(ByteBuffer.wrap(id.clone()), new VerifyingKey(keyFactory.generatePublic(keySpec), startValidity, endValidity));
       } catch (InvalidKeySpecException | NoSuchAlgorithmException e) { // Won't be thrown, as we having a working algorithm and key spec.
         throw new IllegalStateException(e);
       }
     } else {
-      this.verificationKeys.put(ByteBuffer.wrap(id), verifierKey);
+      this.verificationKeys.put(ByteBuffer.wrap(id), new VerifyingKey(verifierKey, startValidity, endValidity));
     }
   }
 
   @Override
-  public PrivateKeyWithId getSigningKey() {
+  public SigningKey getSigningKey() {
     if (signingKey == null) {
       throw new IllegalKeyRequestException("no signing key available");
     }
@@ -165,11 +189,11 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
   }
 
   @Override
-  public PublicKey getVerifyingKey(byte[] id) {
+  public VerifyingKey getVerifyingKey(byte[] id) {
     checkArgument(id != null, "id is null");
     checkArgument(id.length != 0, "id is empty");
 
-    PublicKey verificationKey = verificationKeys.get(ByteBuffer.wrap(id));
+    VerifyingKey verificationKey = verificationKeys.get(ByteBuffer.wrap(id));
     if (verificationKey == null) {
       throw new IllegalKeyRequestException("no verification key for {id=" + new String(id, ENCODING_CHARSET) + "}");
     }
@@ -191,18 +215,28 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
     if (signingKey != null) {
       JsonObject signingKeyContainer = new JsonObject();
       signingKeyContainer.addProperty("keyId", new String(signingKey.id, ENCODING_CHARSET));
-      signingKeyContainer.addProperty("algorithm", signingKey.key.getAlgorithm());
-      signingKeyContainer.addProperty("key", Base64.getEncoder().encodeToString(signingKey.key.getEncoded()));
+      signingKeyContainer.addProperty("algorithm", signingKey.value.getAlgorithm());
+      signingKeyContainer.addProperty("key", Base64.getEncoder().encodeToString(signingKey.value.getEncoded()));
       data.add("signingKey", signingKeyContainer);
     }
 
     JsonArray keys = new JsonArray();
-    for (Entry<ByteBuffer,PublicKey> entry : verificationKeys.entrySet()) {
-      JsonObject key = new JsonObject();
-      key.addProperty("keyId", new String(entry.getKey().array(), ENCODING_CHARSET));
-      key.addProperty("algorithm", entry.getValue().getAlgorithm());
-      key.addProperty("key", Base64.getEncoder().encodeToString(entry.getValue().getEncoded()));
-      keys.add(key);
+    for (Entry<ByteBuffer,VerifyingKey> entry : verificationKeys.entrySet()) {
+      JsonObject verifyingKeyContainer = new JsonObject();
+      VerifyingKey verifyingKey = entry.getValue();
+
+      verifyingKeyContainer.addProperty("keyId", new String(entry.getKey().array(), ENCODING_CHARSET));
+      verifyingKeyContainer.addProperty("algorithm", verifyingKey.value.getAlgorithm());
+      verifyingKeyContainer.addProperty("key", Base64.getEncoder().encodeToString(verifyingKey.value.getEncoded()));
+
+      if (verifyingKey.startValidity != null) {
+        verifyingKeyContainer.addProperty("startValidity", verifyingKey.startValidity);
+      }
+      if (verifyingKey.endValidity != null) {
+        verifyingKeyContainer.addProperty("endValidity", verifyingKey.endValidity);
+      }
+
+      keys.add(verifyingKeyContainer);
     }
     data.add("verificationKeys", keys);
 
@@ -238,10 +272,16 @@ public final class LocalSignatureKeyContainer implements SignatureKeyContainer {
 
         JsonArray keys = data.getAsJsonArray("verificationKeys");
         for (int i = 0; i < keys.size(); i++) {
-          JsonObject key = keys.get(i).getAsJsonObject();
-          KeyFactory factory = KeyFactory.getInstance(key.getAsJsonPrimitive("algorithm").getAsString());
-          container.addVerifierKey(factory.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(key.getAsJsonPrimitive("key").getAsString()))), key
-              .getAsJsonPrimitive("keyId").getAsString().getBytes(ENCODING_CHARSET), false);
+          JsonObject verifyingKeyContainer = keys.get(i).getAsJsonObject();
+          byte[] id = verifyingKeyContainer.getAsJsonPrimitive("keyId").getAsString().getBytes(ENCODING_CHARSET);
+
+          KeyFactory factory = KeyFactory.getInstance(verifyingKeyContainer.getAsJsonPrimitive("algorithm").getAsString());
+          PublicKey publicKey = factory.generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(
+              verifyingKeyContainer.getAsJsonPrimitive("key").getAsString())));
+          Long startValidity = verifyingKeyContainer.has("startValidity") ? verifyingKeyContainer.getAsJsonPrimitive("startValidity").getAsLong() : null;
+          Long endValidity = verifyingKeyContainer.has("endValidity") ? verifyingKeyContainer.getAsJsonPrimitive("endValidity").getAsLong() : null;
+
+          container.addVerifierKey(publicKey, id, startValidity, endValidity, false);
         }
         break;
 

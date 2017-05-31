@@ -15,13 +15,6 @@
  */
 package edu.mit.ll.pace.signature;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Arrays;
-import java.util.Objects;
-
 import edu.mit.ll.pace.IllegalKeyRequestException;
 
 /**
@@ -30,61 +23,13 @@ import edu.mit.ll.pace.IllegalKeyRequestException;
 public interface SignatureKeyContainer {
 
   /**
-   * Private key with an id.
-   */
-  final class PrivateKeyWithId {
-
-    /**
-     * Private key.
-     */
-    public final PrivateKey key;
-
-    /**
-     * Id associated with the private key.
-     */
-    public final byte[] id;
-
-    /**
-     * Constructor.
-     *
-     * @param privateKey
-     *          Private key.
-     * @param id
-     *          Id.
-     */
-    public PrivateKeyWithId(PrivateKey privateKey, byte[] id) {
-      checkArgument(privateKey != null, "key is null");
-      checkArgument(id != null, "id ßis null");
-      checkArgument(id.length != 0, "id is empty");
-
-      this.key = privateKey;
-      this.id = id;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(key, id);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (null == obj || !(obj instanceof PrivateKeyWithId)) {
-        return false;
-      }
-
-      PrivateKeyWithId other = (PrivateKeyWithId) obj;
-      return key.equals(other.key) && Arrays.equals(id, other.id);
-    }
-  }
-
-  /**
    * Get the signing key to use in signing entries.
    *
    * @return The signing key and an identifier used to retrieve the appropriate verifier key.
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  PrivateKeyWithId getSigningKey();
+  SigningKey getSigningKey();
 
   /**
    * Get the verifier key for the given signature key.
@@ -95,6 +40,6 @@ public interface SignatureKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  PublicKey getVerifyingKey(byte[] id);
+  VerifyingKey getVerifyingKey(byte[] id);
 
 }

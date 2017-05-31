@@ -40,7 +40,6 @@ import org.apache.hadoop.io.WritableUtils;
 
 import edu.mit.ll.pace.EntryField;
 import edu.mit.ll.pace.IllegalKeyRequestException;
-import edu.mit.ll.pace.encryption.EncryptionKeyContainer.KeyWithVersion;
 import edu.mit.ll.pace.internal.MutableEntry;
 
 /**
@@ -162,10 +161,10 @@ final class FieldEncryptor {
     ByteArrayInputStream ciphertextStream = new ByteArrayInputStream(entry.getBytes(config.destination));
     DataInput ciphertextIn = new DataInputStream(ciphertextStream);
 
-    byte[] key = getKey(columnVisibility, ciphertextIn);
+    EncryptionKey key = getKey(columnVisibility, ciphertextIn, entry.timestamp);
     byte[] ciphertext = new byte[ciphertextStream.available()];
     ciphertextIn.readFully(ciphertext);
-    byte[] decryptedData = encryptor.decrypt(key, ciphertext);
+    byte[] decryptedData = encryptor.decrypt(key.value, ciphertext);
 
     // Break apart the decrypted data.
     ByteArrayInputStream dataStream = new ByteArrayInputStream(decryptedData);
@@ -222,9 +221,9 @@ final class FieldEncryptor {
 
       return key;
     } else {
-      KeyWithVersion keyData = keys.getKey(config.keyId, config.keyLength);
+      EncryptionKey keyData = keys.getKey(config.keyId, config.keyLength);
       WritableUtils.writeVInt(out, keyData.version); // Write the version of the key being used as meta-data.
-      return keyData.key;
+      return keyData.value;
     }
   }
 
@@ -237,26 +236,31 @@ final class FieldEncryptor {
    *          Visibility expression for the field.
    * @param in
    *          Stream from which metadata is read.
+   * @param timestamp
+   *          Timestamp for the entry.
    * @return Field encryption key.
    * @throws IOException
    *           Not actually thrown.
    */
-  private byte[] getKey(ColumnVisibility visibility, DataInput in) throws IOException {
+  private EncryptionKey getKey(ColumnVisibility visibility, DataInput in, long timestamp) throws IOException {
     if (config.encryptUsingVisibility) {
-      if (visibility.getParseTree().getType() != NodeType.EMPTY) {
+      if (visibility.getParseTree().getType() == NodeType.EMPTY) {
+        return new EncryptionKey(new byte[config.keyLength]);
+      } else {
         // Rebuild the key from the shares created based on the visibility expression.
-        byte[] key = readVisibilityShare(visibility.getParseTree(), visibility.getExpression(), in, false);
-
+        EncryptionKey key = readVisibilityShare(visibility.getParseTree(), visibility.getExpression(), in, timestamp, false);
         if (key == null) {
           throw new IllegalKeyRequestException();
         }
         return key;
-      } else {
-        return new byte[config.keyLength];
       }
     } else {
       int version = WritableUtils.readVInt(in);
-      return keys.getKey(config.keyId, version, config.keyLength);
+      EncryptionKey key = keys.getKey(config.keyId, version, config.keyLength);
+      if (!key.isValid(timestamp)) {
+        throw new EncryptionException("entry encrypted with a key that was revoked at the time of encryption");
+      }
+      return key;
     }
   }
 
@@ -281,11 +285,11 @@ final class FieldEncryptor {
       case TERM:
         // This is the only case we actually write to the stream. Encrypt the share with the attribute share.
         // The output format is "version || length || encrypted data"
-        KeyWithVersion keyData = keys.getAttributeKey(new String(node.getTerm(expression).toArray(), VISIBILITY_CHARSET), config.keyId, config.keyLength);
+        EncryptionKey keyData = keys.getAttributeKey(new String(node.getTerm(expression).toArray(), VISIBILITY_CHARSET), config.keyId, config.keyLength);
         WritableUtils.writeVInt(out, keyData.version); // Key version is written to the metadata.
 
         byte[] encrypted;
-        encrypted = encryptor.encrypt(keyData.key, share);
+        encrypted = encryptor.encrypt(keyData.value, share);
         WritableUtils.writeVInt(out, encrypted.length);
         out.write(encrypted);
         break;
@@ -329,6 +333,8 @@ final class FieldEncryptor {
    *          Visibility expression.
    * @param in
    *          Stream from which metadata is read.
+   * @param timestamp
+   *          Timestamp for the entry.
    * @param skipDecryption
    *          Tracks whether the call to this method is trying to regenerate the share.
    *          <p>
@@ -338,7 +344,7 @@ final class FieldEncryptor {
    * @throws IOException
    *           Not actually thrown.
    */
-  private byte[] readVisibilityShare(Node node, byte[] expression, DataInput in, boolean skipDecryption) throws IOException {
+  private EncryptionKey readVisibilityShare(Node node, byte[] expression, DataInput in, long timestamp, boolean skipDecryption) throws IOException {
     byte[] share = null;
 
     switch (node.getType()) {
@@ -351,8 +357,12 @@ final class FieldEncryptor {
 
         if (!skipDecryption) {
           try {
-            byte[] key = keys.getAttributeKey(new String(node.getTerm(expression).toArray(), VISIBILITY_CHARSET), config.keyId, version, config.keyLength);
-            share = encryptor.decrypt(key, encrypted);
+            EncryptionKey key = keys.getAttributeKey(new String(node.getTerm(expression).toArray(), VISIBILITY_CHARSET), config.keyId, version,
+                config.keyLength);
+            if (!key.isValid(timestamp)) {
+              throw new EncryptionException("entry encrypted with a key that was revoked at the time of encryption");
+            }
+            share = encryptor.decrypt(key.value, encrypted);
           } catch (IllegalKeyRequestException e) {
             // Swallow this error. The user does not have access to decrypt this sub-share, but it still may be possible for the user to decrypt another
             // sub-share that will give the same data. This error will be re-thrown if at the end of reading all shares the users does not have enough
@@ -364,7 +374,7 @@ final class FieldEncryptor {
       case AND:
         // Read random shares, with the final share being the original share xor'ed with each of the random shares.
         for (Node child : node.getChildren()) {
-          byte[] mask = readVisibilityShare(child, expression, in, skipDecryption);
+          EncryptionKey mask = readVisibilityShare(child, expression, in, timestamp, skipDecryption);
 
           // A single failure means this whole AND is a failure.
           if (!skipDecryption) {
@@ -373,9 +383,9 @@ final class FieldEncryptor {
               skipDecryption = true;
             } else {
               if (share == null) {
-                share = mask;
+                share = mask.value;
               } else {
-                xor(share, mask);
+                xor(share, mask.value);
               }
             }
           }
@@ -385,9 +395,9 @@ final class FieldEncryptor {
       case OR:
         // Read the share from multiple possible attribute shares. Only one share is needed.
         for (Node child : node.getChildren()) {
-          byte[] tempKey = readVisibilityShare(child, expression, in, skipDecryption);
+          EncryptionKey tempKey = readVisibilityShare(child, expression, in, timestamp, skipDecryption);
           if (!skipDecryption && tempKey != null) {
-            share = tempKey;
+            share = tempKey.value;
             skipDecryption = true;
           }
         }
@@ -397,7 +407,11 @@ final class FieldEncryptor {
         throw new UnsupportedOperationException();
     }
 
-    return share;
+    if (share == null) {
+      return null;
+    } else {
+      return new EncryptionKey(share);
+    }
   }
 
   /**
@@ -418,7 +432,8 @@ final class FieldEncryptor {
   }
 
   /**
-   * Checks the encrypted value created by this encryptor can be used to search for the given fields.
+   * Checks the encrypted value created by this encryptor can be used to search for the given fields. Checks the encrypted value created by this encryptor can
+   * be used to search for the given fields.
    * <p>
    * The fields can only be searched for if they are the same set as the sources for this field encryptor.
    *
@@ -461,13 +476,13 @@ final class FieldEncryptor {
   List<byte[]> getServerSideFilterValues(MutableEntry key, boolean followingKey) {
     List<byte[]> filterValues = new ArrayList<>();
 
-    for (KeyWithVersion keyData : keys.getKeys(config.keyId, config.keyLength)) {
+    for (EncryptionKey keyData : keys.getKeys(config.keyId, config.keyLength)) {
       ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
       DataOutput ciphertextOut = new DataOutputStream(ciphertextStream);
 
       try {
         WritableUtils.writeVInt(ciphertextOut, keyData.version);
-        ciphertextOut.write(encryptor.encrypt(keyData.key, concatData(key)));
+        ciphertextOut.write(encryptor.encrypt(keyData.value, concatData(key)));
         if (followingKey) {
           ciphertextOut.writeByte(0);
         }

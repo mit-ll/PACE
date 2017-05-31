@@ -15,11 +15,7 @@
  */
 package edu.mit.ll.pace.encryption;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
 
 import edu.mit.ll.pace.IllegalKeyRequestException;
 
@@ -27,53 +23,6 @@ import edu.mit.ll.pace.IllegalKeyRequestException;
  * Interface defining operations that must be supported by a key container for it to work with this module.
  */
 public interface EncryptionKeyContainer {
-
-  /**
-   * Key with its version.
-   */
-  final class KeyWithVersion {
-    /**
-     * Encryption key.
-     */
-    public final byte[] key;
-
-    /**
-     * Version of the key.
-     */
-    public final int version;
-
-    /**
-     * Key with its version.
-     *
-     * @param key
-     *          Key.
-     * @param version
-     *          Version.
-     */
-    public KeyWithVersion(byte[] key, int version) {
-      checkArgument(key != null, "key is null");
-      checkArgument(key.length != 0, "key is empty");
-      checkArgument(version >= 0, "version is negative");
-
-      this.key = key;
-      this.version = version;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(key, version);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (null == obj || !(obj instanceof KeyWithVersion)) {
-        return false;
-      }
-
-      KeyWithVersion other = (KeyWithVersion) obj;
-      return Arrays.equals(key, other.key) && version == other.version;
-    }
-  }
 
   /**
    * Get all the versioned keys for the given id.
@@ -86,7 +35,7 @@ public interface EncryptionKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  Collection<KeyWithVersion> getKeys(String id, int length) throws IllegalKeyRequestException;
+  Collection<EncryptionKey> getKeys(String id, int length) throws IllegalKeyRequestException;
 
   /**
    * Get the key for the given id.
@@ -99,7 +48,7 @@ public interface EncryptionKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  KeyWithVersion getKey(String id, int length) throws IllegalKeyRequestException;
+  EncryptionKey getKey(String id, int length) throws IllegalKeyRequestException;
 
   /**
    * Get the key for the given id and version.
@@ -114,7 +63,7 @@ public interface EncryptionKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  byte[] getKey(String id, int version, int length) throws IllegalKeyRequestException;
+  EncryptionKey getKey(String id, int version, int length) throws IllegalKeyRequestException;
 
   /**
    * Get the encryption key for the given attribute.
@@ -129,7 +78,7 @@ public interface EncryptionKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  KeyWithVersion getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException;
+  EncryptionKey getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException;
 
   /**
    * Get the encryption key for the given attribute.
@@ -146,6 +95,6 @@ public interface EncryptionKeyContainer {
    * @throws IllegalKeyRequestException
    *           User lacks the permissions to obtain the desired key.
    */
-  byte[] getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException;
+  EncryptionKey getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException;
 
 }

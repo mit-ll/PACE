@@ -20,7 +20,6 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -79,7 +78,7 @@ public class MockSignatureKeyContainer implements SignatureKeyContainer {
   /**
    * The public key wrapped by this container.
    */
-  private final Map<String,PublicKey> verifyingKeys = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<String,VerifyingKey> verifyingKeys = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   /**
    * Create a mock container with the given signature and verifying keys.
@@ -98,17 +97,18 @@ public class MockSignatureKeyContainer implements SignatureKeyContainer {
     this.signingKey = getKeyPair(signer, keyLength, signingKeyId).getPrivate();
 
     for (String keyId : verifyingKeyIds) {
-      this.verifyingKeys.put(String.format("%s_%d_%s", signer.getKeyGenerationAlgorithm(), keyLength, keyId), getKeyPair(signer, keyLength, keyId).getPublic());
+      this.verifyingKeys.put(String.format("%s_%d_%s", signer.getKeyGenerationAlgorithm(), keyLength, keyId),
+          new VerifyingKey(getKeyPair(signer, keyLength, keyId).getPublic(), null, null));
     }
   }
 
   @Override
-  public PrivateKeyWithId getSigningKey() {
-    return new PrivateKeyWithId(signingKey, signingKeyId.getBytes(StandardCharsets.UTF_8));
+  public SigningKey getSigningKey() {
+    return new SigningKey(signingKey, signingKeyId.getBytes(StandardCharsets.UTF_8));
   }
 
   @Override
-  public PublicKey getVerifyingKey(byte[] id) {
+  public VerifyingKey getVerifyingKey(byte[] id) {
     String keyId = new String(id, StandardCharsets.UTF_8);
     return verifyingKeys.get(keyId);
   }

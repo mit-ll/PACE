@@ -39,6 +39,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import edu.mit.ll.pace.IllegalKeyRequestException;
+import edu.mit.ll.pace.encryption.EncryptionKey;
 import edu.mit.ll.pace.encryption.EncryptionKeyContainer;
 
 /**
@@ -100,7 +101,7 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
   /**
    * The encryption keys stored in this container.
    */
-  private final Map<KeyLookup,Map<Integer,KeyWithVersion>> encryptionKeys = new HashMap<>();
+  private final Map<KeyLookup,Map<Integer,EncryptionKey>> encryptionKeys = new HashMap<>();
 
   /**
    * Add a key to the store.
@@ -113,7 +114,25 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
    *          The key data.
    */
   public void addKey(String id, int version, byte[] key) {
-    addKey(null, id, version, key, true);
+    addKey(null, id, version, key, null, null, true);
+  }
+
+  /**
+   * Add a key to the store.
+   *
+   * @param id
+   *          Id value used to derive the key.
+   * @param version
+   *          Version of the key.
+   * @param key
+   *          The key data.
+   * @param startValidity
+   *          When the key started to be valid, or null for no start validity.
+   * @param endValidity
+   *          When the key stopped being valid, or null for no end validity.
+   */
+  public void addKey(String id, int version, byte[] key, Long startValidity, Long endValidity) {
+    addKey(null, id, version, key, startValidity, endValidity, true);
   }
 
   /**
@@ -130,7 +149,7 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
    */
   public void addKey(String attribute, String id, int version, byte[] key) {
     checkArgument(attribute != null, "attribute is null");
-    addKey(attribute, id, version, key, true);
+    addKey(attribute, id, version, key, null, null, true);
   }
 
   /**
@@ -144,26 +163,52 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
    *          Version of the key.
    * @param key
    *          The key data.
+   * @param startValidity
+   *          When the key started to be valid, or null for no start validity.
+   * @param endValidity
+   *          When the key stopped being valid, or null for no end validity.
+   */
+  public void addKey(String attribute, String id, int version, byte[] key, Long startValidity, Long endValidity) {
+    checkArgument(attribute != null, "attribute is null");
+    addKey(attribute, id, version, key, startValidity, endValidity, true);
+  }
+
+  /**
+   * Add a key to the store.
+   *
+   * @param attribute
+   *          Attribute the key is for.
+   * @param id
+   *          Id value used to derive the key.
+   * @param version
+   *          Version of the key.
+   * @param key
+   *          The key data.
+   * @param startValidity
+   *          When the key started to be valid, or null for no start validity.
+   * @param endValidity
+   *          When the key stopped being valid, or null for no end validity.
    * @param copy
    *          Whether to copy the data.
    */
-  private void addKey(String attribute, String id, int version, byte[] key, boolean copy) {
+  private void addKey(String attribute, String id, int version, byte[] key, Long startValidity, Long endValidity, boolean copy) {
     checkArgument(id != null, "id is null");
     checkArgument(version >= 0, "version is negative");
     checkArgument(key != null, "key is null");
     checkArgument(key.length > 0, "key is empty");
+    checkArgument(startValidity == null || endValidity == null || endValidity >= startValidity, "end validity cannot come before start validity");
 
     KeyLookup mapKey = new KeyLookup(attribute, id, key.length);
-    Map<Integer,KeyWithVersion> keys = encryptionKeys.computeIfAbsent(mapKey, k -> new HashMap<>());
-    keys.put(version, new KeyWithVersion(copy ? key.clone() : key, version));
+    Map<Integer,EncryptionKey> keys = encryptionKeys.computeIfAbsent(mapKey, k -> new HashMap<>());
+    keys.put(version, new EncryptionKey(copy ? key.clone() : key, version, startValidity, endValidity));
   }
 
   @Override
-  public Collection<KeyWithVersion> getKeys(String id, int length) throws IllegalKeyRequestException {
+  public Collection<EncryptionKey> getKeys(String id, int length) throws IllegalKeyRequestException {
     checkArgument(id != null, "id is null");
     checkArgument(length > 0, "length is non-positive");
 
-    Map<Integer,KeyWithVersion> versionedKeys = encryptionKeys.get(new KeyLookup(null, id, length));
+    Map<Integer,EncryptionKey> versionedKeys = encryptionKeys.get(new KeyLookup(null, id, length));
     if (versionedKeys == null || versionedKeys.isEmpty()) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("id", id), Pair.of("length", length)));
     }
@@ -172,11 +217,11 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
   }
 
   @Override
-  public KeyWithVersion getKey(String id, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getKey(String id, int length) throws IllegalKeyRequestException {
     checkArgument(id != null, "id is null");
     checkArgument(length > 0, "length is non-positive");
 
-    Map<Integer,KeyWithVersion> versionedKeys = encryptionKeys.get(new KeyLookup(id, length));
+    Map<Integer,EncryptionKey> versionedKeys = encryptionKeys.get(new KeyLookup(id, length));
     if (versionedKeys == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("id", id), Pair.of("length", length)));
     }
@@ -190,31 +235,31 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
   }
 
   @Override
-  public byte[] getKey(String id, int version, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getKey(String id, int version, int length) throws IllegalKeyRequestException {
     checkArgument(id != null, "id is null");
     checkArgument(version >= 0, "version is negative");
     checkArgument(length > 0, "length is non-positive");
 
-    Map<Integer,KeyWithVersion> versionedKeys = encryptionKeys.get(new KeyLookup(id, length));
+    Map<Integer,EncryptionKey> versionedKeys = encryptionKeys.get(new KeyLookup(id, length));
     if (versionedKeys == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("id", id), Pair.of("length", length)));
     }
 
-    KeyWithVersion key = versionedKeys.get(version);
+    EncryptionKey key = versionedKeys.get(version);
     if (key == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("id", id), Pair.of("length", length), Pair.of("version", version)));
     }
 
-    return key.key;
+    return key;
   }
 
   @Override
-  public KeyWithVersion getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getAttributeKey(String attribute, String id, int length) throws IllegalKeyRequestException {
     checkArgument(attribute != null, "attribute is null");
     checkArgument(id != null, "id is null");
     checkArgument(length > 0, "length is non-positive");
 
-    Map<Integer,KeyWithVersion> versionedKeys = encryptionKeys.get(new KeyLookup(attribute, id, length));
+    Map<Integer,EncryptionKey> versionedKeys = encryptionKeys.get(new KeyLookup(attribute, id, length));
     if (versionedKeys == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("attribute", attribute), Pair.of("id", id), Pair.of("length", length)));
     }
@@ -228,24 +273,24 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
   }
 
   @Override
-  public byte[] getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException {
+  public EncryptionKey getAttributeKey(String attribute, String id, int version, int length) throws IllegalKeyRequestException {
     checkArgument(attribute != null, "attribute is null");
     checkArgument(id != null, "id is null");
     checkArgument(version >= 0, "version is negative");
     checkArgument(length > 0, "length is non-positive");
 
-    Map<Integer,KeyWithVersion> versionedKeys = encryptionKeys.get(new KeyLookup(attribute, id, length));
+    Map<Integer,EncryptionKey> versionedKeys = encryptionKeys.get(new KeyLookup(attribute, id, length));
     if (versionedKeys == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("attribute", attribute), Pair.of("id", id), Pair.of("length", length)));
     }
 
-    KeyWithVersion key = versionedKeys.get(version);
+    EncryptionKey key = versionedKeys.get(version);
     if (key == null) {
       throw new IllegalKeyRequestException(getMessage(Pair.of("attribute", attribute), Pair.of("id", id), Pair.of("length", length),
           Pair.of("version", version)));
     }
 
-    return key.key;
+    return key;
   }
 
   /**
@@ -274,16 +319,24 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
     data.addProperty("version", CURRENT_VERSION);
 
     JsonArray keys = new JsonArray();
-    for (Entry<KeyLookup,Map<Integer,KeyWithVersion>> entry : encryptionKeys.entrySet()) {
-      for (KeyWithVersion keyData : entry.getValue().values()) {
-        JsonObject key = new JsonObject();
+    for (Entry<KeyLookup,Map<Integer,EncryptionKey>> entry : encryptionKeys.entrySet()) {
+      for (EncryptionKey keyData : entry.getValue().values()) {
+        JsonObject keyContainer = new JsonObject();
         if (entry.getKey().attribute != null) {
-          key.addProperty("attribute", entry.getKey().attribute);
+          keyContainer.addProperty("attribute", entry.getKey().attribute);
         }
-        key.addProperty("id", entry.getKey().id);
-        key.addProperty("version", keyData.version);
-        key.addProperty("key", Base64.getEncoder().encodeToString(keyData.key));
-        keys.add(key);
+        keyContainer.addProperty("id", entry.getKey().id);
+        keyContainer.addProperty("version", keyData.version);
+        keyContainer.addProperty("key", Base64.getEncoder().encodeToString(keyData.value));
+
+        if (keyData.startValidity != null) {
+          keyContainer.addProperty("startValidity", keyData.startValidity);
+        }
+        if (keyData.endValidity != null) {
+          keyContainer.addProperty("endValidity", keyData.endValidity);
+        }
+
+        keys.add(keyContainer);
       }
     }
     data.add("keys", keys);
@@ -304,20 +357,22 @@ public final class LocalEncryptionKeyContainer implements EncryptionKeyContainer
     JsonParser parser = new JsonParser();
 
     JsonObject data = parser.parse(in).getAsJsonObject();
-    int version = data.getAsJsonPrimitive("version").getAsInt();
+    int serializationVersion = data.getAsJsonPrimitive("version").getAsInt();
 
-    switch (version) {
+    switch (serializationVersion) {
       case 1:
         JsonArray keys = data.getAsJsonArray("keys");
         for (int i = 0; i < keys.size(); i++) {
-          JsonObject key = keys.get(i).getAsJsonObject();
-          if (key.has("attribute")) {
-            container.addKey(key.getAsJsonPrimitive("attribute").getAsString(), key.getAsJsonPrimitive("id").getAsString(), key.getAsJsonPrimitive("version")
-                .getAsInt(), Base64.getDecoder().decode(key.getAsJsonPrimitive("key").getAsString()), false);
-          } else {
-            container.addKey(null, key.getAsJsonPrimitive("id").getAsString(), key.getAsJsonPrimitive("version").getAsInt(),
-                Base64.getDecoder().decode(key.getAsJsonPrimitive("key").getAsString()), false);
-          }
+          JsonObject keyContainer = keys.get(i).getAsJsonObject();
+
+          String attribute = keyContainer.has("attribute") ? keyContainer.getAsJsonPrimitive("attribute").getAsString() : null;
+          String id = keyContainer.getAsJsonPrimitive("id").getAsString();
+          int version = keyContainer.getAsJsonPrimitive("version").getAsInt();
+          byte[] key = Base64.getDecoder().decode(keyContainer.getAsJsonPrimitive("key").getAsString());
+          Long startValidity = keyContainer.has("startValidity") ? keyContainer.getAsJsonPrimitive("startValidity").getAsLong() : null;
+          Long endValidity = keyContainer.has("endValidity") ? keyContainer.getAsJsonPrimitive("endValidity").getAsLong() : null;
+
+          container.addKey(attribute, id, version, key, startValidity, endValidity, false);
         }
         break;
 

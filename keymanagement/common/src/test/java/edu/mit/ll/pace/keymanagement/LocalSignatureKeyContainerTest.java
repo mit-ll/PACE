@@ -72,9 +72,9 @@ public class LocalSignatureKeyContainerTest {
       writer.close();
 
       LocalSignatureKeyContainer container2 = LocalSignatureKeyContainer.read(new FileReader(file));
-      assertThat("has matching keys", container2.getSigningKey().key.getEncoded(), equalTo(container.getSigningKey().key.getEncoded()));
+      assertThat("has matching keys", container2.getSigningKey().value.getEncoded(), equalTo(container.getSigningKey().value.getEncoded()));
       assertThat("has matching keys", container2.getSigningKey().id, equalTo(container.getSigningKey().id));
-      assertThat("has matching keys", container2.getVerifyingKey(keyId).getEncoded(), equalTo(container.getVerifyingKey(keyId).getEncoded()));
+      assertThat("has matching keys", container2.getVerifyingKey(keyId).value.getEncoded(), equalTo(container.getVerifyingKey(keyId).value.getEncoded()));
     }
 
   }

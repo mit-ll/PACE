@@ -42,7 +42,6 @@ import com.google.common.primitives.Longs;
 
 import edu.mit.ll.pace.internal.MutableEntry;
 import edu.mit.ll.pace.signature.SignatureConfig.Destination;
-import edu.mit.ll.pace.signature.SignatureKeyContainer.PrivateKeyWithId;
 
 /**
  * Signs an Accumulo {@literal Entry<Key,Value>} based on the supplied configuration.
@@ -108,8 +107,8 @@ public final class EntrySigner {
       signer = config.algorithm.getInstance(config.provider);
 
       try {
-        PrivateKeyWithId keyData = keys.getSigningKey();
-        signer.initSign(keyData.key);
+        SigningKey keyData = keys.getSigningKey();
+        signer.initSign(keyData.value);
         signerId = keyData.id;
       } catch (InvalidKeyException e) {
         throw new SignatureException(e);
@@ -243,7 +242,12 @@ public final class EntrySigner {
       DataInput in = new DataInputStream(stream);
       byte[] signerId = new byte[WritableUtils.readVInt(in)];
       in.readFully(signerId);
-      verifier.initVerify(keys.getVerifyingKey(signerId));
+
+      VerifyingKey keyData = keys.getVerifyingKey(signerId);
+      if (!keyData.isValid(wrapped.timestamp)) {
+        throw new SignatureException("entry signed with a key that was revoked at the time of signing");
+      }
+      verifier.initVerify(keyData.value);
 
       hasTimestamp = in.readBoolean();
 
