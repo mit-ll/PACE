@@ -88,6 +88,7 @@ supported:
 [well structured][apilyzer].
 * **cobertura:cobertura**–Generates test coverage report in the site directory.
 * **javadoc:javadoc**–Generates JavaDoc for the PACE project.
+* mvn exec:exec@plot-performance**—Generate plots for the performance measurements.
 
 Future Work
 -----------
