@@ -155,6 +155,19 @@
               </arguments>
             </configuration>
           </execution>
+          <execution>
+            <id>plot-performance</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>python</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>../src/main/scripts/plot-performance.py</argument>
+              </arguments>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
